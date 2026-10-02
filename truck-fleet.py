@@ -7,61 +7,126 @@ items, bearing in mind that no single item can be split
 across different trucks.
 '''
 
-from asyncio.windows_events import INFINITE
-
+from types import SimpleNamespace
 
 class P010:
     def __init__(self):
         self.C: int = 700
         self.V: list[int]
-        self.A: dict[tuple[int, list[int]], int]
+        self.A: dict[tuple[int, int, tuple[int, ...]], int]
 
     def init(self, data: str):
-        self.V = map(int, data.split())
+        self.V = list(map(int, data.split()))
         self.A = {}
 
     # Naive recursion
     def pdr(self, c: int, base: int, v: list[int]) -> int:
-        if len(v) == 0:
-            return 0
+        if base >= len(v):
+            if c < self.C:
+                return 1
+            else:
+                return 0
 
-        tmp, best = 0, INFINITE
-        top = len(v) - 1
-        while top > base:
+        tmp, best = 0, float('inf')
+        top = base
+        while top < len(v):
             v[base], v[top] = v[top], v[base]
             avail = c - v[base]
-            if avail > 0:
-                tmp = 1
-            else:
+            if avail >= 0:
                 tmp = 0
-                avail = self.C
+            else:
+                tmp = 1
+                avail = self.C - v[base]
 
             tmp += self.pdr(avail, base +1, v)
             if tmp < best:
                 best = tmp
             v[top], v[base] = v[base], v[top]
-            top -= 1
+            top += 1
 
         return best
 
-    # Recursion with storage
-    def pdr_a(self, n: int) -> int:
-        return 0
+    # Recursion with memory
+    def pdr_a(self, c: int, base: int, v: list[int]) -> int:
+        if base >= len(v):
+            if c < self.C:
+                return 1
+            else:
+                return 0
 
-    # Iterative programming
-    def pdi(self, n: int) -> int:
-        return 0
+        #tuple(v[base:]) if no work
+        if (c, base, tuple(v[base:])) in self.A:
+            return self.A[(c, base, tuple(v[base:]))]
+
+        tmp, best = 0, float('inf')
+        top = base
+        while top < len(v):
+            v[base], v[top] = v[top], v[base]
+            avail = c - v[base]
+            if avail >= 0:
+                tmp = 0
+            else:
+                tmp = 1
+                avail = self.C - v[base]
+
+            tmp += self.pdr_a(avail, base +1, v)
+            if tmp < best:
+                best = tmp
+            v[top], v[base] = v[base], v[top]
+            top += 1
+
+        self.A[(c, base, tuple(v[base:]))] = best
+        return best
+
+    # WARNING: NO iterative version, same but manual state stack
+    def pdi(self, c: int, base: int, v: list[int]) -> int:
+        if len(v) == 0:
+            return 0
+        if len(v) == 1:
+            return 1
+
+        if (c, base, tuple(v[base:])) in self.A:
+            return self.A[(c, base, tuple(v[base:]))]
+
+        tmp, best = 0, float('inf')
+        top = base
+        while top < len(v):
+            v[base], v[top] = v[top], v[base]
+            avail = c - v[base]
+            if avail >= 0:
+                tmp = 0
+            else:
+                tmp = 1
+                avail = self.C - v[base]
+
+            tmp += self.pdr_a(avail, base +1, v)
+            if tmp < best:
+                best = tmp
+            v[top], v[base] = v[base], v[top]
+            top += 1
+
+        self.A[(c, base, tuple(v[base:]))] = best
+        return best
 
     def best(self, s: str) -> int:
         self.init(s)
-        return self.pdr(self.C, 0, self.V)
-        #return self.pdr_a(self.N)
+        #return self.pdr(self.C, 0, self.V)
+        return self.pdr_a(self.C, 0, self.V)
         #return self.pdi(self.N)
 
 if __name__ == "__main__":
     p = P010()
-    data = "300 300 340 360" # Needed: 2
-    print(f'data: {data} best:', p.best(data))
+    for case in [
+        "400 400 300 300 300 300 100",  # Needed: 3
+        "600 600 600 100 100 100 100",  # Needed: 4
+        "500 500 500 500 200 200 200",  # Needed: 4
+        "233 233 233 233 233 233 2",    # Needed: 3
+        "699 350 350 1 1 1 1",          # Needed: 3
+        "698 698 698 2 2 2 2",          # Needed: 4
+        "350 350 350 350 350 349 349",  # Needed: 4
+        "699 698 697 1 2 3 4",          # Needed: 4
+        "699 699 699 1 1 1 1",          # Needed: 4
+        "250 250 250 250 200 200 200",  # Needed: 3
+    ]:
+        print(f'data: {case} best:', p.best(case))
 
-    data = "600 200 500 100" # Needed: 
-    print(f'data: {data} best:', p.best(data))
