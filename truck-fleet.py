@@ -7,8 +7,6 @@ items, bearing in mind that no single item can be split
 across different trucks.
 '''
 
-from types import SimpleNamespace
-
 class P010:
     def __init__(self):
         self.C: int = 700
