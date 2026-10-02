@@ -7,6 +7,8 @@ items, bearing in mind that no single item can be split
 across different trucks.
 '''
 
+from copy import copy
+
 class P010:
     def __init__(self):
         self.C: int = 700
@@ -52,7 +54,6 @@ class P010:
             else:
                 return 0
 
-        #tuple(v[base:]) if no work
         if (c, base, tuple(v[base:])) in self.A:
             return self.A[(c, base, tuple(v[base:]))]
 
@@ -106,11 +107,46 @@ class P010:
         self.A[(c, base, tuple(v[base:]))] = best
         return best
 
-    def best(self, s: str) -> int:
+    def complete_solution(self, t: int, w: list[int], base: int,
+                          v: list[int]) -> list[int]:
+        if base >= len(v):
+            return []
+
+        if (c, base, tuple(v[base:])) in self.A:
+            return self.A[(c, base, tuple(v[base:]))]
+
+        tmp, best = copy(w), [float('inf')] * (len(v) - base)
+        top = base
+        while top < len(v):
+            v[base], v[top] = v[top], v[base]
+
+            # TODO: how to stack lists
+            tmp[base] -= v[base] # TODO: tmp[base] no, tmp[t] truck index
+            if tmp[base] < 0:
+                tmp[base] += v[base]
+                w.append(self.C)
+                tmp[base +1] -= v[base]
+            elif tmp[base] == 0:
+                tmp.append(self.C)
+
+            tmp += self.complete_solution(tmp, base +1, v)
+            if tmp < best:
+                best = tmp
+
+            # TODO: revert changes
+            v[top], v[base] = v[base], v[top]
+            top += 1
+
+        self.A[(c, base, tuple(v[base:]))] = copy(w)
+        return w
+
+    def best(self, s: str) -> int | list[int]:
         self.init(s)
         #return self.pdr(self.C, 0, self.V)
-        return self.pdr_a(self.C, 0, self.V)
+        #return self.pdr_a(self.C, 0, self.V)
         #return self.pdi(self.N)
+        return self.complete_solution(self.C, 0,
+                                      self.V, [self.C])
 
 if __name__ == "__main__":
     p = P010()
