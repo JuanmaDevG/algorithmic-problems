@@ -107,46 +107,88 @@ class P010:
         self.A[(c, base, tuple(v[base:]))] = best
         return best
 
-    def complete_solution(self, t: int, w: list[int], base: int,
-                          v: list[int]) -> list[int]:
-        if base >= len(v):
-            return []
+    def loadvec_solution(self, base: int, v: list[int],
+                          w: list[int]) -> list[int]:
+        if base == len(v) -1:
+            loaded = w[-1] + v[base]
+            if loaded > self.C:
+                return w + [v[base]]
+            else:
+                ret = copy(w)
+                ret[-1] = loaded
+                return ret
 
-        if (c, base, tuple(v[base:])) in self.A:
-            return self.A[(c, base, tuple(v[base:]))]
+        key = (w[-1], base, tuple(sorted(v[base:])))
+        if key in self.A:
+            return self.A[key]
 
-        tmp, best = copy(w), [float('inf')] * (len(v) - base)
+        nbest, best_result = float('inf'), []
         top = base
+
         while top < len(v):
             v[base], v[top] = v[top], v[base]
 
-            # TODO: how to stack lists
-            tmp[base] -= v[base] # TODO: tmp[base] no, tmp[t] truck index
-            if tmp[base] < 0:
-                tmp[base] += v[base]
-                w.append(self.C)
-                tmp[base +1] -= v[base]
-            elif tmp[base] == 0:
-                tmp.append(self.C)
+            loaded = w[-1] + v[base]
+            if loaded > self.C:
+                wtmp = w + [v[base]]
+            else:
+                wtmp = w[:-1] + [loaded]
 
-            tmp += self.complete_solution(tmp, base +1, v)
-            if tmp < best:
-                best = tmp
+            result = self.loadvec_solution(base +1, v, wtmp)
+            if len(result) < nbest:
+                best_result = result
+                nbest = len(best_result)
 
-            # TODO: revert changes
             v[top], v[base] = v[base], v[top]
             top += 1
 
-        self.A[(c, base, tuple(v[base:]))] = copy(w)
-        return w
+        self.A[key] = best_result
+        return best_result
+
+    # Return vector of truck indices
+    def indexed_solution(self, c: int, base: int, v: list[int],
+                         w: list[int], truck: int = 1) -> list[int]:
+        if base == len(v) -1:
+            avail = c - v[base]
+            if avail < 0:
+                w[base] = truck +1
+                return w
+            else:
+                w[base] = truck
+                return w
+
+        key = (c, base, truck, tuple(v[base:]))
+        if key in self.A:
+            return self.A[key]
+
+        best, least = [], float('inf')
+        for top in range(base, len(v)):
+            v[base], v[top] = v[top], v[base]
+            tmp = copy(w)
+            avail = c - v[base]
+            if avail < 0:
+                cur_truck = truck +1
+                avail = self.C - v[base]
+            else:
+                cur_truck = truck
+            tmp[base] = cur_truck
+
+            result = self.indexed_solution(avail, base +1, v, tmp, cur_truck)
+            if max(result) < least:
+                best = result
+                least = max(result)
+            v[top], v[base] = v[base], v[top]
+
+        self.A[(c, base, tuple(v[base:]))] = best
+        return best
 
     def best(self, s: str) -> int | list[int]:
         self.init(s)
         #return self.pdr(self.C, 0, self.V)
         #return self.pdr_a(self.C, 0, self.V)
         #return self.pdi(self.N)
-        return self.complete_solution(self.C, 0,
-                                      self.V, [self.C])
+        #return self.loadvec_solution(0, self.V, [0])
+        return self.indexed_solution(self.C, 0, self.V, [0] * len(self.V), 1)
 
 if __name__ == "__main__":
     p = P010()
