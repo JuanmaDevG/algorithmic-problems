@@ -9,7 +9,7 @@ across different trucks.
 
 from copy import copy
 
-class P010:
+class P011:
     def __init__(self):
         self.C: int = 700
         self.V: list[int]
@@ -157,7 +157,7 @@ class P010:
                 w[base] = truck
                 return w
 
-        key = (c, base, truck, tuple(v[base:]))
+        key = (c, base, tuple(v[base:]))
         if key in self.A:
             return self.A[key]
 
@@ -179,10 +179,10 @@ class P010:
                 least = max(result)
             v[top], v[base] = v[base], v[top]
 
-        self.A[(c, base, tuple(v[base:]))] = best
+        self.A[key] = best
         return best
 
-    def best(self, s: str) -> int | list[int]:
+    def best_solution(self, s: str) -> int | list[int]:
         self.init(s)
         #return self.pdr(self.C, 0, self.V)
         #return self.pdr_a(self.C, 0, self.V)
@@ -191,7 +191,7 @@ class P010:
         return self.indexed_solution(self.C, 0, self.V, [0] * len(self.V), 1)
 
 if __name__ == "__main__":
-    p = P010()
+    p = P011()
     for case in [
         "400 400 300 300 300 300 100",  # Needed: 3
         "600 600 600 100 100 100 100",  # Needed: 4
@@ -204,5 +204,5 @@ if __name__ == "__main__":
         "699 699 699 1 1 1 1",          # Needed: 4
         "250 250 250 250 200 200 200",  # Needed: 3
     ]:
-        print(f'data: {case} best:', p.best(case))
+        print(f'data: {case} best:', p.best_solution(case))
 

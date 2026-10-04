@@ -6,7 +6,7 @@ on the table, and the player whose turn it is—but who cannot
 remove any tokens—loses.
 '''
 
-class P004:
+class NimGame:
     def __init__(self):
         self.N: int = 0
         self.M: int = 0
@@ -65,7 +65,7 @@ class P004:
         return self.pdi(self.N)
 
 if __name__ == "__main__":
-    p = P004()
+    p = NimGame()
     data = "8 4" # Salida: 3
     print(f'data: {data} best:', p.best(data))
 
