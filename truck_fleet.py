@@ -77,36 +77,6 @@ class P011:
         self.A[(c, base, tuple(v[base:]))] = best
         return best
 
-    # WARNING: NO iterative version, same but manual state stack
-    def pdi(self, c: int, base: int, v: list[int]) -> int:
-        if len(v) == 0:
-            return 0
-        if len(v) == 1:
-            return 1
-
-        if (c, base, tuple(v[base:])) in self.A:
-            return self.A[(c, base, tuple(v[base:]))]
-
-        tmp, best = 0, float('inf')
-        top = base
-        while top < len(v):
-            v[base], v[top] = v[top], v[base]
-            avail = c - v[base]
-            if avail >= 0:
-                tmp = 0
-            else:
-                tmp = 1
-                avail = self.C - v[base]
-
-            tmp += self.pdr_a(avail, base +1, v)
-            if tmp < best:
-                best = tmp
-            v[top], v[base] = v[base], v[top]
-            top += 1
-
-        self.A[(c, base, tuple(v[base:]))] = best
-        return best
-
     def loadvec_solution(self, base: int, v: list[int],
                           w: list[int]) -> list[int]:
         if base == len(v) -1:
@@ -186,7 +156,6 @@ class P011:
         self.init(s)
         #return self.pdr(self.C, 0, self.V)
         #return self.pdr_a(self.C, 0, self.V)
-        #return self.pdi(self.N)
         #return self.loadvec_solution(0, self.V, [0])
         return self.indexed_solution(self.C, 0, self.V, [0] * len(self.V), 1)
 
