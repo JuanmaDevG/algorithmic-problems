@@ -127,7 +127,7 @@ class P011:
                 w[base] = truck
                 return w
 
-        key = (c, base, v[base], w[base])
+        key = (c, base, tuple(w[base:]))
         if key in self.A:
             return self.A[key]
 
