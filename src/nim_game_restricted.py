@@ -1,4 +1,4 @@
-'''
+"""
 In the two-player game of Nim, there are N tokens on the board,
 and each player takes turns removing one or more tokens from the table,
 up to a maximum of M. The game ends when no tokens remain
@@ -7,13 +7,14 @@ remove any tokens—loses.
 
 This time it comes with a restriction, the immediate last play chosen
 can't be played in the current turn.
-'''
+"""
+
 
 class NimGameRestricted:
     def __init__(self):
         self.N: int = 0
         self.M: int = 0
-        self.A: dict[int, int] = {}
+        self.A: dict[tuple[int, int], int] = {}
 
     def init(self, data: str):
         tokens = data.split()
@@ -33,7 +34,7 @@ class NimGameRestricted:
 
     # Recursion with storage
     def pdr_a(self, n: int, m: int) -> int:
-        key = (n,m)
+        key = (n, m)
         if key in self.A:
             return self.A[key]
 
@@ -62,20 +63,8 @@ class NimGameRestricted:
 
         return A[n]
 
-    def best(self, s: str) -> bool:
+    def best(self, s: str) -> int:
         self.init(s)
-        return self.pdr(self.N, 0)
-        #return self.pdr_a(self.N)
-        #return self.pdi(self.N)
-
-if __name__ == "__main__":
-    p = NimGameRestricted()
-    data = "8 4" # Salida: 3
-    print(f'data: {data} best:', p.best(data))
-
-    data = "5 4" #Salida: -1
-    print(f'data: {data} best:', p.best(data))
-
-    data = "60 3"
-    print(f'data: {data} best:', p.best(data))
-
+        # return self.pdr(self.N, 0)
+        return self.pdr_a(self.N, self.M)
+        # return self.pdi(self.N)
