@@ -1,0 +1,39 @@
+#!/bin/bash
+
+if [ ! -d .venv ]; then
+  python3 -m venv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt
+  deactivate
+fi
+source .venv/bin/activate
+
+USAGE_MSG=$(
+  cat <<'EOF'
+  Commands:
+    h                 - Show this message
+    try [test_name]   - Use the test suite
+    no                - Exit the tools and environment
+EOF
+)
+PROJECT_DIR="$(dirname $(realpath $BASH_SOURCE[0]))"
+
+try() {
+  local just
+  if [ -n "$1" ]; then
+    just=(-p "test_*$1*" -v)
+  fi
+  py -m unittest discover -s tests -t "$PROJECT_DIR" -b "${just[@]}"
+}
+
+h() {
+  printf "$USAGE_MSG\n"
+}
+
+no() {
+  unset -f try no
+  unset PROJECT_DIR USAGE_MSG
+  deactivate
+}
+
+echo "Press 'h' help with usage"

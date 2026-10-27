@@ -1,10 +1,11 @@
-'''
+"""
 In the two-player game of Nim, there are N tokens on the board,
 and each player takes turns removing one or more tokens from the table,
 up to a maximum of M. The game ends when no tokens remain
 on the table, and the player whose turn it is—but who cannot
 remove any tokens—loses.
-'''
+"""
+
 
 class NimGame:
     def __init__(self):
@@ -60,15 +61,6 @@ class NimGame:
 
     def best(self, s: str) -> int:
         self.init(s)
-        #return self.pdr(self.N)
-        #return self.pdr_a(self.N)
+        # return self.pdr(self.N)
+        # return self.pdr_a(self.N)
         return self.pdi(self.N)
-
-if __name__ == "__main__":
-    p = NimGame()
-    data = "8 4" # Salida: 3
-    print(f'data: {data} best:', p.best(data))
-
-    data = "5 4" #Salida: -1
-    print(f'data: {data} best:', p.best(data))
-
