@@ -115,7 +115,7 @@ class P011:
         self.A[key] = best_result
         return best_result
 
-    # Return vector of truck indices
+    # Return vector of truck indices (+ branching and bounding)
     def indexed_solution(self, c: int, base: int, v: list[int],
                          w: list[int], truck: int = 1) -> list[int]:
         if base == len(v) -1:
@@ -127,20 +127,25 @@ class P011:
                 w[base] = truck
                 return w
 
-        key = (c, base, tuple(v[base:]))
+        key = (c, base, tuple(w[base:]))
         if key in self.A:
             return self.A[key]
 
         best, least = [], float('inf')
         for top in range(base, len(v)):
             v[base], v[top] = v[top], v[base]
-            tmp = copy(w)
+            w[base], w[top] = w[top], w[base]
             avail = c - v[base]
             if avail < 0:
                 cur_truck = truck +1
                 avail = self.C - v[base]
             else:
                 cur_truck = truck
+
+            if cur_truck >= least:
+                v[top], v[base] = v[base], v[top]
+                continue
+            tmp = copy(w)
             tmp[base] = cur_truck
 
             result = self.indexed_solution(avail, base +1, v, tmp, cur_truck)
@@ -148,6 +153,7 @@ class P011:
                 best = result
                 least = max(result)
             v[top], v[base] = v[base], v[top]
+            w[top], w[base] = w[base], w[top]
 
         self.A[key] = best
         return best
