@@ -10,28 +10,61 @@ source .venv/bin/activate
 
 USAGE_MSG=$(
   cat <<'EOF'
-  Commands:
-    h                 - Show this message
-    try [test_name]   - Use the test suite
-    no                - Exit the tools and environment
+Commands:
+  h                   - Show this message
+  t                   - List available test names
+  run [suite_name]    - Run tests, or just run [name]
+  no                  - Exit the tools and environment
 EOF
 )
 PROJECT_DIR="$(dirname $(realpath $BASH_SOURCE[0]))"
-
-try() {
-  local just
-  if [ -n "$1" ]; then
-    just=(-p "test_*$1*" -v)
-  fi
-  py -m unittest discover -s tests -t "$PROJECT_DIR" -b "${just[@]}"
-}
 
 h() {
   printf "$USAGE_MSG\n"
 }
 
+t() {
+  DIR="$(pwd)"
+  cd "$PROJECT_DIR"
+  local suite=($(ls tests))
+  local unwanted=("__init__.py" "__pycache__")
+  # Remove unwanted
+  for u in ${unwanted[@]}; do
+    for i in ${!suite[@]}; do
+      if [ "$u" = "${suite[$i]}" ]; then
+        unset "suite[$i]"
+        break
+      fi
+    done
+  done
+  suite=(${suite[@]})
+  # Remove prefix and suffix
+  for t in ${!suite[@]}; do
+    local name="${suite[$t]}"
+    name="${name#test_}"
+    name="${name%.py}"
+    suite[$t]="$name"
+  done
+  printf "\e[1mTest suites (%s):\e[0m\n" "${#suite[@]}"
+  printf "%s\n" "${suite[@]}"
+  echo
+  cd "$DIR"
+  return
+}
+
+run() {
+  DIR="$(pwd)"
+  cd "$PROJECT_DIR"
+  local just
+  if [ -n "$1" ]; then
+    just=(-p "test_*$1*")
+  fi
+  python3 -m unittest discover -s tests -t "$PROJECT_DIR" -b "${just[@]}" -v
+  cd "$DIR"
+}
+
 no() {
-  unset -f try no
+  unset -f h t no run
   unset PROJECT_DIR USAGE_MSG
   deactivate
 }
