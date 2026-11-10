@@ -9,15 +9,15 @@ remove any tokens—loses.
 
 class NimGame:
     def __init__(self):
-        self.N: int = 0
-        self.M: int = 0
+        self.N: int
+        self.M: int
         self.A: dict[int, int] = {}
 
     def init(self, data: str):
         tokens = data.split()
         self.N = int(tokens[0])
         self.M = int(tokens[1])
-        self.A = {}
+        self.A.clear()
 
     # Naive recursion
     def pdr(self, n: int) -> int:

@@ -1,33 +1,37 @@
-'''
+"""
 We have a fleet of trucks with a capacity of 700 tons
 and N items of cargo with sizes w_1, w_2... , w_N,
 all weighing less than 700 tons. We want to determine
 the minimum number of trucks needed to transport the N
 items, bearing in mind that no single item can be split
 across different trucks.
-'''
+"""
 
 from copy import copy
 
-class P011:
+
+class TruckFleet:
     def __init__(self):
         self.C: int = 700
-        self.V: list[int]
-        self.A: dict[tuple[int, int, tuple[int, ...]], int]
+        self.V: list[int] = []
+        self.A: dict[tuple[int, int, tuple[int, ...]], int | float] = {}
+        self.A_L: dict[tuple[int, int, tuple[int, ...]], list[int]] = {}
 
     def init(self, data: str):
-        self.V = list(map(int, data.split()))
-        self.A = {}
+        self.V.clear()
+        self.V.extend(map(int, data.split()))
+        self.A.clear()
+        self.A_L.clear()
 
     # Naive recursion
-    def pdr(self, c: int, base: int, v: list[int]) -> int:
+    def pdr(self, c: int, base: int, v: list[int]) -> int | float:
         if base >= len(v):
             if c < self.C:
                 return 1
             else:
                 return 0
 
-        tmp, best = 0, float('inf')
+        tmp, best = 0, float("inf")
         top = base
         while top < len(v):
             v[base], v[top] = v[top], v[base]
@@ -38,16 +42,15 @@ class P011:
                 tmp = 1
                 avail = self.C - v[base]
 
-            tmp += self.pdr(avail, base +1, v)
-            if tmp < best:
-                best = tmp
+            tmp += self.pdr(avail, base + 1, v)
+            best = min(tmp, best)
             v[top], v[base] = v[base], v[top]
             top += 1
 
         return best
 
     # Recursion with memory
-    def pdr_a(self, c: int, base: int, v: list[int]) -> int:
+    def pdr_a(self, c: int, base: int, v: list[int]) -> int | float:
         if base >= len(v):
             if c < self.C:
                 return 1
@@ -57,7 +60,7 @@ class P011:
         if (c, base, tuple(v[base:])) in self.A:
             return self.A[(c, base, tuple(v[base:]))]
 
-        tmp, best = 0, float('inf')
+        tmp, best = 0, float("inf")
         top = base
         while top < len(v):
             v[base], v[top] = v[top], v[base]
@@ -68,18 +71,16 @@ class P011:
                 tmp = 1
                 avail = self.C - v[base]
 
-            tmp += self.pdr_a(avail, base +1, v)
-            if tmp < best:
-                best = tmp
+            tmp += self.pdr_a(avail, base + 1, v)
+            best = min(best, tmp)
             v[top], v[base] = v[base], v[top]
             top += 1
 
         self.A[(c, base, tuple(v[base:]))] = best
         return best
 
-    def loadvec_solution(self, base: int, v: list[int],
-                          w: list[int]) -> list[int]:
-        if base == len(v) -1:
+    def loadvec_solution(self, base: int, v: list[int], w: list[int]) -> list[int]:
+        if base == len(v) - 1:
             loaded = w[-1] + v[base]
             if loaded > self.C:
                 return w + [v[base]]
@@ -90,9 +91,9 @@ class P011:
 
         key = (w[-1], base, tuple(sorted(v[base:])))
         if key in self.A:
-            return self.A[key]
+            return self.A_L[key]
 
-        nbest, best_result = float('inf'), []
+        nbest, best_result = float("inf"), []
         top = base
 
         while top < len(v):
@@ -104,7 +105,7 @@ class P011:
             else:
                 wtmp = w[:-1] + [loaded]
 
-            result = self.loadvec_solution(base +1, v, wtmp)
+            result = self.loadvec_solution(base + 1, v, wtmp)
             if len(result) < nbest:
                 best_result = result
                 nbest = len(best_result)
@@ -112,16 +113,17 @@ class P011:
             v[top], v[base] = v[base], v[top]
             top += 1
 
-        self.A[key] = best_result
+        self.A_L[key] = best_result
         return best_result
 
     # Return vector of truck indices (+ branching and bounding)
-    def indexed_solution(self, c: int, base: int, v: list[int],
-                         w: list[int], truck: int = 1) -> list[int]:
-        if base == len(v) -1:
+    def indexed_solution(
+        self, c: int, base: int, v: list[int], w: list[int], truck: int = 1
+    ) -> list[int]:
+        if base == len(v) - 1:
             avail = c - v[base]
             if avail < 0:
-                w[base] = truck +1
+                w[base] = truck + 1
                 return w
             else:
                 w[base] = truck
@@ -129,15 +131,15 @@ class P011:
 
         key = (c, base, tuple(w[base:]))
         if key in self.A:
-            return self.A[key]
+            return self.A_L[key]
 
-        best, least = [], float('inf')
+        best, least = [], float("inf")
         for top in range(base, len(v)):
             v[base], v[top] = v[top], v[base]
             w[base], w[top] = w[top], w[base]
             avail = c - v[base]
             if avail < 0:
-                cur_truck = truck +1
+                cur_truck = truck + 1
                 avail = self.C - v[base]
             else:
                 cur_truck = truck
@@ -148,36 +150,19 @@ class P011:
             tmp = copy(w)
             tmp[base] = cur_truck
 
-            result = self.indexed_solution(avail, base +1, v, tmp, cur_truck)
+            result = self.indexed_solution(avail, base + 1, v, tmp, cur_truck)
             if max(result) < least:
                 best = result
                 least = max(result)
             v[top], v[base] = v[base], v[top]
             w[top], w[base] = w[base], w[top]
 
-        self.A[key] = best
+        self.A_L[key] = best
         return best
 
-    def best_solution(self, s: str) -> int | list[int]:
+    def best_solution(self, s: str) -> int | float | list[int]:
         self.init(s)
-        #return self.pdr(self.C, 0, self.V)
-        #return self.pdr_a(self.C, 0, self.V)
-        #return self.loadvec_solution(0, self.V, [0])
+        # return self.pdr(self.C, 0, self.V)
+        # return self.pdr_a(self.C, 0, self.V)
+        # return self.loadvec_solution(0, self.V, [0])
         return self.indexed_solution(self.C, 0, self.V, [0] * len(self.V), 1)
-
-if __name__ == "__main__":
-    p = P011()
-    for case in [
-        "400 400 300 300 300 300 100",  # Needed: 3
-        "600 600 600 100 100 100 100",  # Needed: 4
-        "500 500 500 500 200 200 200",  # Needed: 4
-        "233 233 233 233 233 233 2",    # Needed: 3
-        "699 350 350 1 1 1 1",          # Needed: 3
-        "698 698 698 2 2 2 2",          # Needed: 4
-        "350 350 350 350 350 349 349",  # Needed: 4
-        "699 698 697 1 2 3 4",          # Needed: 4
-        "699 699 699 1 1 1 1",          # Needed: 4
-        "250 250 250 250 200 200 200",  # Needed: 3
-    ]:
-        print(f'data: {case} best:', p.best_solution(case))
-
