@@ -24,19 +24,22 @@ the selected supermarkets.
 """
 
 
-# problem id: P101
+#problem_id=P101
 class OptimalShoppingList:
     def __init__(self):
         self.C: list[int] = []
-        self.K: list[list[int]] = []
+        self.S: list[list[int]] = []
 
     def fill(self, data: list[str]):
         self.C.clear()
-        self.K.clear()
-        for market in data:
-            m_iter: map[int] = map(int, market.split())
-            self.C.append(next(m_iter))
-            self.K.append(list(m_iter))
+        self.S.clear()
+        for k in data:
+            k_iter: map[int] = map(int, k.split())
+            self.C.append(next(k_iter))
+            self.S.append(list(k_iter))
+
+    def naive_recursive(self, i: int, K: list[list[int]], C: list[int]) -> list[int]:
+        return []
 
     def best_solution(self, data: list[str]) -> list[int]:
-        return []
+        return naive_recursion

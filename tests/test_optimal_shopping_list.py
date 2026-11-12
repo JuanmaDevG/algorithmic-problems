@@ -10,7 +10,7 @@ class TestOptimalShoppingList(unittest.TestCase):
     def setUpClass(cls):
         cls.osl: OptimalShoppingList = OptimalShoppingList()
 
-    def test_01_naive_recursion(self):
+    def test_01_list_naive_recursive(self):
         pass
 
     def test_02_mem_recursion(self):
