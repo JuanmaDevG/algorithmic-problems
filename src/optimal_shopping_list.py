@@ -21,6 +21,12 @@ purchased at each supermarket to minimize the total
 purchase cost, taking into account both the individual
 prices of the products and the fixed travel costs to
 the selected supermarkets.
+
+For the a solution function, parameters are:
+  K: vector of supermarkets with product prices
+  C: cost of traveling to a supermarket
+  i: current product index
+  k: current supermarket
 """
 
 # problem id: P101
@@ -40,6 +46,28 @@ class OptimalShoppingList:
             self.C.append(next(k_iter))
             self.K.append(list(k_iter))
 
+    def best_solution(self, data: list[str]) -> int:
+        self.fill(data)
+        return self.naive_recursive(self.K, self.C)
+
+    def best_solution_klist(self, data: list[str]) -> list[int]:
+        self.fill(data)
+        return self.naive_recursive_klist(self.K, self.C)
+
+    def optimistic_bonund(self, K: list[list[int]], i: int) -> int:
+        """
+        Relax restrictions, pretend that the travel is free
+        """
+        res = 0
+        for prod in range(i, len(K[0])):
+            res += min(k[prod] for k in K)
+        return res
+
+    def pessimistic_bound(self, K: list[list[int]], C: list[int], i: int, k: int):
+        pass
+
+    # ------------- Implementations -------------
+
     def naive_recursive(
         self, K: list[list[int]], C: list[int], i: int = 0, k: int | None = None
     ) -> int:
@@ -49,17 +77,34 @@ class OptimalShoppingList:
         for l, v_l in enumerate(K):
             best = min(
                 best,
-                (C[l] if k is None or k != l else 0)
-                + v_l[i]
-                + self.naive_recursive(K, C, i + 1, l),
+                (C[l] if k != l else 0) + v_l[i] + self.naive_recursive(K, C, i + 1, l),
             )
 
-        return int(best)
+        return best
 
     def branching_and_bounding(
-        self, K: list[list[int]], C: list[int], i: int = 0
+        self,
+        K: list[list[int]],
+        C: list[int],
+        i: int = 0,
+        k: int | None = None,
+        accum: int = 0,
     ) -> int:
-        return 0
+        if i >= len(K[0]):
+            return 0
+        best: int = cast(int, float("inf"))
+        for l, v_l in enumerate(K):
+            expected = (C[l] if k != l else 0) + v_l[i]
+            current = accum + expected
+            if current > best:
+                continue
+            # if optimistic_bound > pessimistic_bound: continue
+            best = min(
+                best,
+                expected + self.branching_and_bounding(K, C, i + 1, l, current),
+            )
+
+        return best
 
     def naive_recursive_klist(
         self, K: list[list[int]], C: list[int], i: int = 0, k: int | None = None
@@ -74,11 +119,3 @@ class OptimalShoppingList:
                 next_k = i_k
 
         return [next_k + 1] + self.naive_recursive_klist(K, C, i + 1, next_k)
-
-    def best_solution(self, data: list[str]) -> int:
-        self.fill(data)
-        return self.naive_recursive(self.K, self.C)
-
-    def best_solution_klist(self, data: list[str]) -> list[int]:
-        self.fill(data)
-        return self.naive_recursive_klist(self.K, self.C)
