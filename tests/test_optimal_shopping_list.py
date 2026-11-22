@@ -3,6 +3,7 @@ from collections.abc import Callable
 from typing import override
 
 from optimal_shopping_list import OptimalShoppingList
+from tests import timeout
 
 
 class TestOptimalShoppingList(unittest.TestCase):

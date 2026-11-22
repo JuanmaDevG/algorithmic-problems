@@ -101,6 +101,8 @@ class OptimalShoppingList:
             current = accum + expected
             if current > best:
                 continue
+            if self.optimistic_bonund(K, i) > self.pessimistic_bound(v_l, i):
+                continue
             # if optimistic_bound > pessimistic_bound: continue
             best = min(
                 best,
