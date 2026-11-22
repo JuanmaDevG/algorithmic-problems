@@ -63,8 +63,11 @@ class OptimalShoppingList:
             res += min(k[prod] for k in K)
         return res
 
-    def pessimistic_bound(self, K: list[list[int]], C: list[int], i: int, k: int):
-        pass
+    def pessimistic_bound(self, k: list[int], i: int) -> int:
+        """
+        Buy the rest of the objects from the current supermarket
+        """
+        return sum(k[i:])
 
     # ------------- Implementations -------------
 
