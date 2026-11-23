@@ -167,7 +167,7 @@ class TestOptimalShoppingList(unittest.TestCase):
     def test_01_naive_recursive(self):
         self.try_cases(self.short_cases, self.osl.naive_recursive)
 
-    def test_02_branchging_and_bounding(self):
+    def test_02_branching_and_bounding(self):
         self.try_cases(self.short_cases, self.osl.branching_and_bounding)
 
     def test_03_bnb_long_case(self):

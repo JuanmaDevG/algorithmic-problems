@@ -15,6 +15,7 @@ Commands:
   t                   - List available test names
   run [suite_name]    - Run tests, or just run [name]
   no                  - Exit the tools and environment
+  uni_deliver [name]  - Pass to university delivery format
 EOF
 )
 PROJECT_DIR="$(dirname $(realpath $BASH_SOURCE[0]))"
@@ -70,6 +71,7 @@ no() {
 }
 
 uni_deliver() {
+  true
   # TODO: if not $1 format everything to deliver for university
   # TODO: may automate pyvaluador delivery if I have time
 }

@@ -38,7 +38,7 @@ class OptimalShoppingList:
     def __init__(self):
         self.C: list[int] = []
         self.K: list[list[int]] = []
-        self.best_pb: int
+        self.best: int
 
     def fill(self, data: list[str]):
         self.C.clear()
@@ -47,8 +47,7 @@ class OptimalShoppingList:
             k_iter: map[int] = map(int, k.split())
             self.C.append(next(k_iter))
             self.K.append(list(k_iter))
-        self.best_pb = cast(int, float("inf"))
-        # TODO: self.known_pbs: dict[(k, i)] (would it even work?)
+        self.best = cast(int, float("inf"))
 
     def best_solution(self, data: list[str]) -> int:
         self.fill(data)
@@ -61,14 +60,14 @@ class OptimalShoppingList:
     def travel_cost(self, C: list[int], current: int | None, next: int) -> int:
         return C[next] if current != next else 0
 
-    def optimistic_bonund(self, K: list[list[int]], i: int) -> int:
+    def optimistic_bound(self, K: list[list[int]], i: int) -> int:
         """
         Assume the travel cost does not exist and take the minimum
         """
         return min(sum(islice(k, i, len(k))) for k in K)
 
     def pessimistic_bound(
-        self, K: list[list[int]], C: list[int], k: int, i: int
+        self, K: list[list[int]], C: list[int], k: int | None, i: int
     ) -> int:
         """
         Get the local minimum without branching, reaches suboptimal
@@ -114,26 +113,22 @@ class OptimalShoppingList:
         accum: int = 0,
     ) -> int:
         if i >= len(K[0]):
-            return 0
-        best: int = cast(int, float("inf"))
+            self.best = min(self.best, accum)
+            return accum
+
+        ob = accum + self.optimistic_bound(K, i)
+        if self.best <= ob:
+            return cast(int, float("inf"))
+        pb = accum + self.pessimistic_bound(K, C, k, i)
+        if ob == pb:
+            self.best = min(self.best, ob)
+            return self.best
 
         for l, v_l in enumerate(K):
-            ob = accum + self.optimistic_bonund(K, i)
-            if best <= ob:
-                continue
-            pb = accum + self.pessimistic_bound(K, C, l, i)
-            if self.best_pb <= pb:
-                continue
-            else:
-                self.best_pb = pb
             expected = v_l[i] + self.travel_cost(C, k, l)
-            best = min(
-                best,
-                expected
-                + self.branching_and_bounding(K, C, i + 1, l, accum + expected),
-            )
+            _ = self.branching_and_bounding(K, C, i + 1, l, accum + expected)
 
-        return best
+        return self.best
 
     def bnb_sorted_branches(
         self,
@@ -146,6 +141,7 @@ class OptimalShoppingList:
         if i >= len(K[0]):
             return 0
         best: int = cast(int, float("inf"))
+        # TODO: branches must be ordered by the optimistic bound, not like this
         branches: list[int] = [
             K[l][i] + self.travel_cost(C, k, l) for l in range(len(K))
         ]
@@ -154,23 +150,6 @@ class OptimalShoppingList:
         # TODO: explore the best branches first
         for expected in branches:
             pass
-
-        # TODO: trash this loop later
-        for l, v_l in enumerate(K):
-            ob = accum + self.optimistic_bonund(K, i)
-            if best <= ob:
-                continue
-            pb = accum + self.pessimistic_bound(K, C, l, i)
-            if self.best_pb <= pb:
-                continue
-            else:
-                self.best_pb = pb
-            expected = self.travel_cost(C, k, l) + v_l[i]
-            best = min(
-                best,
-                expected
-                + self.branching_and_bounding(K, C, i + 1, l, accum + expected),
-            )
 
         return best
 
