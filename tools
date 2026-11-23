@@ -59,14 +59,19 @@ run() {
   if [ -n "$1" ]; then
     just=(-p "test_*$1*")
   fi
-  python3 -m unittest discover -s tests -t "$PROJECT_DIR" -b "${just[@]}" -v
+  timeout 12 python3 -m unittest discover -s tests -t "$PROJECT_DIR" -b "${just[@]}" -v
   cd "$DIR"
 }
 
 no() {
-  unset -f h t no run
+  unset -f h t no run uni_deliver
   unset PROJECT_DIR USAGE_MSG
   deactivate
 }
 
-echo "Press 'h' help with usage"
+uni_deliver() {
+  # TODO: if not $1 format everything to deliver for university
+  # TODO: may automate pyvaluador delivery if I have time
+}
+
+echo "Press 'h' to view available tools"

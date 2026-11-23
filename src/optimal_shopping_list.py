@@ -30,6 +30,7 @@ For the a solution function, parameters are:
 """
 
 # problem id: P101
+from itertools import islice
 from typing import cast
 
 
@@ -37,6 +38,7 @@ class OptimalShoppingList:
     def __init__(self):
         self.C: list[int] = []
         self.K: list[list[int]] = []
+        self.best_pb: int
 
     def fill(self, data: list[str]):
         self.C.clear()
@@ -45,6 +47,8 @@ class OptimalShoppingList:
             k_iter: map[int] = map(int, k.split())
             self.C.append(next(k_iter))
             self.K.append(list(k_iter))
+        self.best_pb = cast(int, float("inf"))
+        # TODO: self.known_pbs: dict[(k, i)] (would it even work?)
 
     def best_solution(self, data: list[str]) -> int:
         self.fill(data)
@@ -52,22 +56,36 @@ class OptimalShoppingList:
 
     def best_solution_klist(self, data: list[str]) -> list[int]:
         self.fill(data)
-        return self.naive_recursive_klist(self.K, self.C)
+        return []  # TODO: implement naive_recursive_klist and bounded later
+
+    def travel_cost(self, C: list[int], current: int | None, next: int) -> int:
+        return C[next] if current != next else 0
 
     def optimistic_bonund(self, K: list[list[int]], i: int) -> int:
         """
-        Relax restrictions, pretend that the travel is free
+        Assume the travel cost does not exist and take the minimum
         """
-        res = 0
-        for prod in range(i, len(K[0])):
-            res += min(k[prod] for k in K)
-        return res
+        return min(sum(islice(k, i, len(k))) for k in K)
 
-    def pessimistic_bound(self, k: list[int], i: int) -> int:
+    def pessimistic_bound(
+        self, K: list[list[int]], C: list[int], k: int, i: int
+    ) -> int:
         """
-        Buy the rest of the objects from the current supermarket
+        Get the local minimum without branching, reaches suboptimal
+        but feasible solution because computes current path minimum,
+        not global minimum
         """
-        return sum(k[i:])
+        best = 0
+        cur = 0
+        for prod in range(i, len(K[0])):
+            lprod_best: int = cast(int, float("inf"))
+            for l in range(len(K)):
+                cur = K[l][prod] + self.travel_cost(C, k, l)
+                if cur < lprod_best:
+                    lprod_best = cur
+                    k = l
+            best += best
+        return best
 
     # ------------- Implementations -------------
 
@@ -80,7 +98,9 @@ class OptimalShoppingList:
         for l, v_l in enumerate(K):
             best = min(
                 best,
-                (C[l] if k != l else 0) + v_l[i] + self.naive_recursive(K, C, i + 1, l),
+                self.travel_cost(C, k, l)
+                + v_l[i]
+                + self.naive_recursive(K, C, i + 1, l),
             )
 
         return best
@@ -96,31 +116,63 @@ class OptimalShoppingList:
         if i >= len(K[0]):
             return 0
         best: int = cast(int, float("inf"))
+
         for l, v_l in enumerate(K):
-            expected = (C[l] if k != l else 0) + v_l[i]
-            current = accum + expected
-            if current > best:
+            ob = accum + self.optimistic_bonund(K, i)
+            if best <= ob:
                 continue
-            if self.optimistic_bonund(K, i) > self.pessimistic_bound(v_l, i):
+            pb = accum + self.pessimistic_bound(K, C, l, i)
+            if self.best_pb <= pb:
                 continue
-            # if optimistic_bound > pessimistic_bound: continue
+            else:
+                self.best_pb = pb
+            expected = v_l[i] + self.travel_cost(C, k, l)
             best = min(
                 best,
-                expected + self.branching_and_bounding(K, C, i + 1, l, current),
+                expected
+                + self.branching_and_bounding(K, C, i + 1, l, accum + expected),
             )
 
         return best
 
-    def naive_recursive_klist(
-        self, K: list[list[int]], C: list[int], i: int = 0, k: int | None = None
-    ) -> list[int]:
+    def bnb_sorted_branches(
+        self,
+        K: list[list[int]],
+        C: list[int],
+        i: int = 0,
+        k: int | None = None,
+        accum: int = 0,
+    ):
         if i >= len(K[0]):
-            return []
-        best: int | float = float("inf")
-        next_k: int = 0
-        for i_k, v_k in enumerate(K):
-            if (p := C[i_k] if k is None or k != i_k else 0 + v_k[i]) < best:
-                best = p
-                next_k = i_k
+            return 0
+        best: int = cast(int, float("inf"))
+        branches: list[int] = [
+            K[l][i] + self.travel_cost(C, k, l) for l in range(len(K))
+        ]
+        branches.sort()
 
-        return [next_k + 1] + self.naive_recursive_klist(K, C, i + 1, next_k)
+        # TODO: explore the best branches first
+        for expected in branches:
+            pass
+
+        # TODO: trash this loop later
+        for l, v_l in enumerate(K):
+            ob = accum + self.optimistic_bonund(K, i)
+            if best <= ob:
+                continue
+            pb = accum + self.pessimistic_bound(K, C, l, i)
+            if self.best_pb <= pb:
+                continue
+            else:
+                self.best_pb = pb
+            expected = self.travel_cost(C, k, l) + v_l[i]
+            best = min(
+                best,
+                expected
+                + self.branching_and_bounding(K, C, i + 1, l, accum + expected),
+            )
+
+        return best
+
+    def naive_recursive_klist(self) -> list[int]:
+        return []

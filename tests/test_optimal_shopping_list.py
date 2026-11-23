@@ -3,7 +3,6 @@ from collections.abc import Callable
 from typing import override
 
 from optimal_shopping_list import OptimalShoppingList
-from tests import timeout
 
 
 class TestOptimalShoppingList(unittest.TestCase):
@@ -168,14 +167,14 @@ class TestOptimalShoppingList(unittest.TestCase):
     def test_01_naive_recursive(self):
         self.try_cases(self.short_cases, self.osl.naive_recursive)
 
-    def test_02_branching_and_bounding(self):
+    def test_02_branchging_and_bounding(self):
+        self.try_cases(self.short_cases, self.osl.branching_and_bounding)
+
+    def test_03_bnb_long_case(self):
+        self.try_cases([self.long_cases[0]], self.osl.branching_and_bounding)
+
+    def test_04_bnb_extreme_cases(self):
         self.try_cases(self.long_cases, self.osl.branching_and_bounding)
-
-    def test_xx_list_naive_recursive(self):
-        raise NotImplementedError()
-
-    def test_xx_list_mem_recursion(self):
-        raise NotImplementedError()
 
 
 if __name__ == "__main__":
