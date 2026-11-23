@@ -64,7 +64,13 @@ class OptimalShoppingList:
         """
         Assume the travel cost does not exist and take the minimum
         """
-        return min(sum(islice(k, i, len(k))) for k in K)
+        res = 0
+        for j in range(i, len(K[0])):
+            best_price = cast(int, float("inf"))
+            for k in K:
+                best_price = min(best_price, k[j])
+            res += best_price
+        return res
 
     def pessimistic_bound(
         self, K: list[list[int]], C: list[int], k: int | None, i: int
@@ -83,7 +89,7 @@ class OptimalShoppingList:
                 if cur < lprod_best:
                     lprod_best = cur
                     k = l
-            best += best
+            best += lprod_best
         return best
 
     # ------------- Implementations -------------
