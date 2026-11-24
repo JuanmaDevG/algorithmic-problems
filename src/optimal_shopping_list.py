@@ -30,7 +30,6 @@ For the a solution function, parameters are:
 """
 
 # problem id: P101
-from itertools import islice
 from typing import cast
 
 
