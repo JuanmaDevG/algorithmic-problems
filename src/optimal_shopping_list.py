@@ -97,6 +97,11 @@ class OptimalShoppingList:
     def naive_recursive(
         self, K: list[list[int]], C: list[int], i: int = 0, k: int | None = None
     ) -> int:
+        """
+        Naive recursive implementation based on product indices,
+        which is the most inefficient due to supermarket travel
+        duplication. May change later...
+        """
         if i >= len(K[0]):
             return 0
         best: int = cast(int, float("inf"))
